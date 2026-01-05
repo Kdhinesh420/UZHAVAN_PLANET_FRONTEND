@@ -1,8 +1,10 @@
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from db.session import SessionLocal
 from models.Order import Order
 from models.OrderItem import OrderItem
+from schemas.order import OrderCreate, Order as OrderSchema
 from schemas.order import OrderCreate, Order as OrderSchema
 
 router = APIRouter(prefix="/orders", tags=["orders"])
@@ -29,11 +31,11 @@ def create_order(order: OrderCreate, db: Session = Depends(get_db)):
 
 @router.get("/", response_model=list[OrderSchema])
 def read_orders(db: Session = Depends(get_db)):
-    return db.query(Order).all()
+    return db.query(Order).options(joinedload(Order.items)).all()
 
 @router.get("get/{user_id}")
 def get_orders_by_user(user_id: int, db: Session = Depends(get_db)):
-    return db.query(Order).filter(Order.user_id == user_id).all()
+    return db.query(Order).options(joinedload(Order.items)).filter(Order.user_id == user_id).all()
 
 @router.delete("delete/{user_id}")
 def delete_orders_by_user(user_id: int, db: Session = Depends(get_db)):
@@ -44,6 +46,5 @@ def delete_orders_by_user(user_id: int, db: Session = Depends(get_db)):
 @router.put("update/{user_id}/{order_id}")
 def update_orders_by_user(user_id: int, order_id: int, db: Session = Depends(get_db)):
     db.query(Order).filter(Order.user_id == user_id, Order.id == order_id).update({"status": "completed"})
-    db.query(OrderItem).filter(OrderItem.order_id == order_id).update({"status": "completed"}) 
     db.commit()   
     return {"message": "Orders updated"}    

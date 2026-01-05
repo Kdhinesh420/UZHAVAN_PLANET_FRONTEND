@@ -16,11 +16,14 @@ class OrderItem(OrderItemBase):
         from_attributes = True
 
 class OrderBase(BaseModel):
-    user_id: int
+    user_id: Optional[int] = None
     total_amount: float
     status: Optional[str] = 'pending'
 
-class OrderCreate(OrderBase):
+class OrderCreate(BaseModel):
+    user_id: Optional[int] = None
+    total_amount: float
+    status: Optional[str] = 'pending'
     items: List[OrderItemCreate]
 
 class Order(OrderBase):

@@ -11,4 +11,4 @@ class CategoryCreate(CategoryBase):
 class Category(CategoryBase):
     category_id: int
     class Config:
-        orm_mode = True
+        from_attributes = True

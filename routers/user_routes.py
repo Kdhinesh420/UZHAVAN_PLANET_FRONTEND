@@ -1,4 +1,4 @@
-from fastapi import APIRouter,Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from models.User import User
 from models.Product import Product
@@ -30,23 +30,26 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
 @userrouter.get("/{user_id}")
 def get_user(user_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
-    if user:
-        return user
-    return {"message": "User not found"}
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
 
 @userrouter.put("/{user_id}")
 def update_user(user_id: int, user_update: UserUpdate, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
-    if user:
-        user.username = user_update.username
-        user.email = user_update.email
-        user.phone = user_update.phone
-        user.address = user_update.address
-        user.role = user_update.role
-        db.commit()
-        db.refresh(user)
-        return {"message":"Update Done",**user}
-    return {"message": "User not found"}
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user.username = user_update.username
+    user.email = user_update.email
+    user.phone = user_update.phone
+    user.address = user_update.address
+    user.role = user_update.role
+    
+    db.commit()
+    db.refresh(user)
+    return {"message": "Update Done", "user": user}
+
 #use query parameter to delete user
 @userrouter.delete("/")
 def delete_user(user_id: int, db: Session = Depends(get_db)):

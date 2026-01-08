@@ -1,21 +1,12 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import text
-from sqlalchemy.orm import Session, joinedload
-from db.session import SessionLocal
+from sqlalchemy.orm import Session
 from models.Order import Order
 from models.OrderItem import OrderItem
 from schemas.order import OrderCreate, Order as OrderSchema
-from schemas.order import OrderCreate, Order as OrderSchema
-
+from dependencies import get_db
 router = APIRouter(prefix="/orders", tags=["orders"])
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 @router.post("/", response_model=OrderSchema)
 def create_order(order: OrderCreate, db: Session = Depends(get_db)):

@@ -37,14 +37,15 @@ def get_all_products(db: Session = Depends(get_db)):
 @productrouter.put("/{prod_id}")
 def update_product(prod_id: int, product_update: ProductCreate, db: Session = Depends(get_db)):
     product = db.query(Product).filter(Product.id == prod_id).first()
-    if product:
-        product.name = product_update.name
-        product.description = product_update.description
-        product.price = product_update.price
-        db.commit()
-        db.refresh(product)
-        return {"message":"Update Done",**product}
-    return {"message": "Product not found"}
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+        
+    product.name = product_update.name
+    product.description = product_update.description
+    product.price = product_update.price
+    db.commit()
+    db.refresh(product)
+    return {"message": "Update Done", "product": product}
 
 
 

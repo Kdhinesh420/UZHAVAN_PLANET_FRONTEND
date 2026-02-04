@@ -5,3 +5,4 @@ from .Category import Category
 from .Order import Order
 from .OrderItem import OrderItem
 from .Review import Review
+from .Report import Report

@@ -25,33 +25,40 @@ def create_product(
     Create a new product (Seller only)
     Protected route - requires seller authentication
     """
-    # Verify category exists if provided
-    if product.category_id:
-        category = db.query(Category).filter(Category.category_id == product.category_id).first()
-        if not category:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Category not found"
-            )
-    
-    # Create new product
-    new_product = Product(
-        seller_id=current_user.id,  # Automatically set from authenticated user
-        name=product.name,
-        description=product.description,
-        price=product.price,
-        stock_quantity=product.stock_quantity,
-        category_id=product.category_id,
-        image_url=product.image_url,
-        image_url_2=product.image_url_2,
-        image_url_3=product.image_url_3
-    )
-    
-    db.add(new_product)
-    db.commit()
-    db.refresh(new_product)
-    
-    return new_product
+    try:
+        # Verify category exists if provided
+        if product.category_id:
+            category = db.query(Category).filter(Category.category_id == product.category_id).first()
+            if not category:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Category not found"
+                )
+        
+        # Create new product
+        new_product = Product(
+            seller_id=current_user.id,  # Automatically set from authenticated user
+            name=product.name,
+            description=product.description,
+            price=product.price,
+            stock_quantity=product.stock_quantity,
+            category_id=product.category_id,
+            image_url=product.image_url,
+            image_url_2=product.image_url_2,
+            image_url_3=product.image_url_3
+        )
+        
+        db.add(new_product)
+        db.commit()
+        db.refresh(new_product)
+        
+        return new_product
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"CRITICAL ERROR in create_product: {str(e)}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to create product: {str(e)}")
 
 
 @productrouter.get("/", response_model=List[ProductWithSeller])
@@ -69,56 +76,60 @@ def get_all_products(
     Get all products with optional filters
     Public route - no authentication required
     """
-    query = db.query(Product)
-    
-    # Apply filters
-    if search:
-        query = query.filter(
-            or_(
-                Product.name.ilike(f"%{search}%"),
-                Product.description.ilike(f"%{search}%")
-            )
-        )
-    
-    if category_id:
-        query = query.filter(Product.category_id == category_id)
-    
-    if min_price is not None:
-        query = query.filter(Product.price >= min_price)
-    
-    if max_price is not None:
-        query = query.filter(Product.price <= max_price)
-    
-    if in_stock:
-        query = query.filter(Product.stock_quantity > 0)
-    
-    # Get products with pagination
-    products = query.offset(skip).limit(limit).all()
-    
-    # Enrich with seller and category info
-    result = []
-    for product in products:
-        seller = db.query(User).filter(User.id == product.seller_id).first()
-        category = db.query(Category).filter(Category.category_id == product.category_id).first() if product.category_id else None
+    try:
+        query = db.query(Product)
         
-        product_dict = {
-            "id": product.id,
-            "seller_id": product.seller_id,
-            "name": product.name,
-            "description": product.description,
-            "price": float(product.price),
-            "stock_quantity": product.stock_quantity,
-            "category_id": product.category_id,
-            "image_url": product.image_url,
-            "image_url_2": product.image_url_2,
-            "image_url_3": product.image_url_3,
-            "created_at": product.created_at,
-            "seller_username": seller.username if seller else None,
-            "category_name": category.name if category else None
-        }
-        result.append(product_dict)
-    
-    return result
+        # Apply filters
+        if search:
+            query = query.filter(
+                or_(
+                    Product.name.ilike(f"%{search}%"),
+                    Product.description.ilike(f"%{search}%")
+                )
+            )
+        
+        if category_id:
+            query = query.filter(Product.category_id == category_id)
+        
+        if min_price is not None:
+            query = query.filter(Product.price >= min_price)
+        
+        if max_price is not None:
+            query = query.filter(Product.price <= max_price)
+        
+        if in_stock:
+            query = query.filter(Product.stock_quantity > 0)
+        
+        # Get products with pagination
+        products = query.offset(skip).limit(limit).all()
+        
+        # Enrich with seller and category info
+        result = []
+        for product in products:
+            seller = db.query(User).filter(User.id == product.seller_id).first()
+            category = db.query(Category).filter(Category.category_id == product.category_id).first() if product.category_id else None
+            
+            product_dict = {
+                "id": product.id,
+                "seller_id": product.seller_id,
+                "name": product.name,
+                "description": product.description,
+                "price": float(product.price) if product.price is not None else 0.0,
+                "stock_quantity": product.stock_quantity,
+                "category_id": product.category_id,
+                "image_url": product.image_url,
+                "image_url_2": product.image_url_2,
+                "image_url_3": product.image_url_3,
+                "created_at": product.created_at,
+                "seller_username": seller.username if seller else "Unknown Seller",
+                "category_name": category.name if category else "General"
+            }
+            result.append(product_dict)
+        
+        return result
+    except Exception as e:
+        print(f"CRITICAL ERROR in get_all_products: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
 
 @productrouter.get("/my-products", response_model=List[ProductResponse])

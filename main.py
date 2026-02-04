@@ -29,6 +29,19 @@ app.add_middleware(
 
 Base.metadata.create_all(bind=engine)
 
+# Auto-migration for missing columns
+@app.on_event("startup")
+def migrate_db():
+    from sqlalchemy import text
+    with engine.connect() as conn:
+        try:
+            conn.execute(text("ALTER TABLE products ADD COLUMN IF NOT EXISTS image_url_2 TEXT"))
+            conn.execute(text("ALTER TABLE products ADD COLUMN IF NOT EXISTS image_url_3 TEXT"))
+            conn.commit()
+            print("Successfully checked/added missing columns.")
+        except Exception as e:
+            print(f"Migration shadow error (safe to ignore if columns exist): {e}")
+
 @app.get("/")
 def greet():
     return {"message":"hello world"}

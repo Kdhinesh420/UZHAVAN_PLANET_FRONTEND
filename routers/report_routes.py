@@ -11,9 +11,10 @@ from auth import get_current_user, get_current_seller, get_current_buyer
 router = APIRouter(prefix="/reports", tags=["Reports"])
 
 @router.post("", response_model=ReportResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=ReportResponse, include_in_schema=False)
 def create_report(
     report_in: ReportCreate,
-    current_user: User = Depends(get_current_buyer),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -29,9 +30,14 @@ def create_report(
     db.add(new_report)
     db.commit()
     db.refresh(new_report)
-    return new_report
+    
+    # Return enriched with username (Clean dict for Pydantic)
+    report_data = {c.name: getattr(new_report, c.name) for c in new_report.__table__.columns}
+    report_data["username"] = current_user.username
+    return report_data
 
 @router.get("/my-reports", response_model=List[ReportResponse])
+@router.get("/my-reports/", response_model=List[ReportResponse], include_in_schema=False)
 def get_my_reports(
     current_user: User = Depends(get_current_buyer),
     db: Session = Depends(get_db)
@@ -42,6 +48,7 @@ def get_my_reports(
     return db.query(Report).filter(Report.user_id == current_user.id).order_by(Report.created_at.desc()).all()
 
 @router.get("/seller", response_model=List[ReportResponse])
+@router.get("/seller/", response_model=List[ReportResponse], include_in_schema=False)
 def get_seller_reports(
     current_user: User = Depends(get_current_seller),
     db: Session = Depends(get_db)

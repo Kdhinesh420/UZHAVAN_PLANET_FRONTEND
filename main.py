@@ -15,6 +15,8 @@ from routers.review_routes import router as review_router
 from routers.oderitem import router as orderitem_router
 from routers.report_routes import router as report_router
 from routers.upload_routes import router as upload_router
+from routers.seller_routes import router as seller_router
+from routers.feedback_routes import router as feedback_router
 
 app = FastAPI(title="UZHAVAN PLANET API", version="1.0.0")
 
@@ -55,4 +57,6 @@ app.include_router(review_router)
 app.include_router(orderitem_router)
 app.include_router(report_router)
 app.include_router(upload_router)
+app.include_router(seller_router)
+app.include_router(feedback_router)
 

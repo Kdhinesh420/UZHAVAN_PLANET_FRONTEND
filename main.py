@@ -24,7 +24,7 @@ app = FastAPI(title="UZHAVAN PLANET API", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # In production, specify exact origins
-    allow_credentials=True,
+    allow_credentials=False,  # Set to False to allow wildcard origins
     allow_methods=["*"],
     allow_headers=["*"],
 )

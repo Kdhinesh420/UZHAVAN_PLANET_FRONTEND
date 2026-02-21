@@ -3,8 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from db.session import SessionLocal, engine,Base
-from schemas.User import UserCreate,UserUpdate
-from models.User import User
+from schemas.User import UserCreate, UserUpdate
+from models import User, Product, Category, Cart, Order, OrderItem, Review, Report, Feedback
 
 from routers.user_routes import userrouter
 from routers.product_routes import productrouter
@@ -35,8 +35,11 @@ Base.metadata.create_all(bind=engine)
 @app.on_event("startup")
 def migrate_db():
     from sqlalchemy import text
+    from db.session import engine
     with engine.connect() as conn:
         try:
+            # Check if tables exist first by trying a simple query, 
+            # though create_all should have handled it.
             conn.execute(text("ALTER TABLE products ADD COLUMN IF NOT EXISTS image_url_2 TEXT"))
             conn.execute(text("ALTER TABLE products ADD COLUMN IF NOT EXISTS image_url_3 TEXT"))
             conn.commit()

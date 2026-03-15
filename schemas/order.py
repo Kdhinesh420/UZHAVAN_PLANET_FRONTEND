@@ -15,6 +15,14 @@ class OrderItemCreate(OrderItemBase):
     pass
 
 
+class OrderItemUpdate(BaseModel):
+    """Schema for updating order item details"""
+    order_id: Optional[int] = None
+    product_id: Optional[int] = None
+    quantity: Optional[int] = None
+    price: Optional[float] = None
+
+
 class OrderItem(OrderItemBase):
     """Schema for order item response"""
     id: int

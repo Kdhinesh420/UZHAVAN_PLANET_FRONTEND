@@ -1,7 +1,7 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from sqlalchemy import text
+
 from models.User import User
 from models.Report import Report
 from schemas.report import ReportCreate, ReportResponse

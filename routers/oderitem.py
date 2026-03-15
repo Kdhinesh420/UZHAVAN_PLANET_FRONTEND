@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from models.OrderItem import OrderItem
-from schemas.order import OrderItemCreate, OrderItem as OrderItemSchema
+from schemas.order import OrderItemCreate, OrderItemUpdate, OrderItem as OrderItemSchema
+
 from dependencies import get_db
-from schemas.orteritam import OrderItemUpdate
-from db.session import SessionLocal
 from sqlalchemy import text
+
 
 router = APIRouter(prefix="/order_items", tags=["order_items"])
 

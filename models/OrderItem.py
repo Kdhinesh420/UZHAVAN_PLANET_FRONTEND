@@ -14,7 +14,8 @@ class OrderItem(Base):
 
     product_id = Column(
         Integer,
-        ForeignKey("products.id", ondelete="CASCADE")  # ✅ FIX HERE
+        ForeignKey("products.id", ondelete="CASCADE")
+
     )
 
     quantity = Column(Integer, nullable=False)

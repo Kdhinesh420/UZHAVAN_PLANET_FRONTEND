@@ -1,27 +1,21 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from db.session import SessionLocal
+from dependencies import get_db
 from models.Feedback import Feedback
 from models.User import User
 from schemas.feedback import FeedbackCreate, FeedbackResponse
-from auth import get_current_user, get_current_seller, oauth2_scheme
-import models.Feedback as FeedbackModel
+from auth import get_current_seller, oauth2_scheme
 
 router = APIRouter(prefix="/feedback", tags=["Feedback"])
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+
 
 @router.post("", response_model=FeedbackResponse, status_code=status.HTTP_201_CREATED)
 def create_feedback(
     feedback_in: FeedbackCreate,
     db: Session = Depends(get_db),
-    # Optional-a current_user-ai handle pannurom
+    # Handled current_user as optional for guest feedback
     token: Optional[str] = Depends(oauth2_scheme)
 ):
     """
@@ -36,7 +30,7 @@ def create_feedback(
                 user_id = payload.get("user_id")
                 current_user = db.query(User).filter(User.id == user_id).first()
         except Exception:
-            pass # Token invalid-naguest-a treat pannurom
+            pass # Treat invalid token as guest feedback
 
     new_feedback = Feedback(
         user_id=current_user.id if current_user else None,

@@ -1,9 +1,7 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from sqlalchemy.orm import Session
-from db.session import SessionLocal, engine,Base
-from schemas.User import UserCreate, UserUpdate
+from db.session import engine, Base
+
 from models import User, Product, Category, Cart, Order, OrderItem, Review, Report, Feedback
 
 from routers.user_routes import userrouter
